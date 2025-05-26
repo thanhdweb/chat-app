@@ -71,6 +71,20 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    // xóa user
+    const deleteUser = async (userId) => {
+        try {
+            const { data } = await axios.delete(`/api/auth/delete/${userId}`);
+            if (data.success) {
+                toast.success("User deleted successfully");
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
+
 
     // Kết nối chức năng socket với kết nối socket xử lý và cập nhật người dùng trực tuyến
     const connectSocket = (userData) => {
@@ -104,6 +118,7 @@ export const AuthProvider = ({ children }) => {
         socket,
         login,
         logout,
+        deleteUser,
         updateProfile
     }
 

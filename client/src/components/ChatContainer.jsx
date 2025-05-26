@@ -3,14 +3,43 @@ import assets from "../assets/assets";
 import { formatMessageTime } from "../lib/utils";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
+import Swal from "sweetalert2";
 import toast from "react-hot-toast";
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
     useContext(ChatContext);
-  const { authUser, onlineUsers } = useContext(AuthContext);
+  const { authUser, onlineUsers, deleteUser } = useContext(AuthContext);
 
   const [input, setInput] = useState("");
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Xử lý xóa cuộc trò chuyện
+  const handleDeleteUser = async (e) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteUser(selectedUser._id);
+        setSelectedUser(null);
+        Swal.fire("Deleted!", "User has been deleted.", "success");
+      } catch (error) {
+        const message = error.response?.data?.message || error.message || "Failed to delete user.";
+        Swal.fire("Error!", message, "error");
+      }
+    }
+  };
+
 
   // Xử lý việc gửi tin nhắn
   const handleSendMessage = async (e) => {
@@ -42,6 +71,18 @@ const ChatContainer = () => {
     }
   }, [selectedUser]);
 
+  const dropdownRef = useRef();
+
+  useEffect(() => {
+    const handler = e => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showDropdown]);
+
   // tạo thanh cuộn chat mượn mà
   const scrollEnd = useRef();
   useEffect(() => {
@@ -69,9 +110,28 @@ const ChatContainer = () => {
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
           alt=""
-          className="md:hidden max-w-7"
+          className="md:hidden max-w-5"
         />
-        <img src={assets.help_icon} alt="" className="max-md:hidden max-w-5" />
+        <div ref={dropdownRef} className="relative">
+          <img
+            src={assets.menu_icon}
+            alt=""
+            className="max-w-5 cursor-pointer"
+            onClick={() => setShowDropdown(!showDropdown)}
+          />
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <div className="absolute top-full right-0 w-48 p-3 bg-[#282142] border border-gray-600 text-gray-100 shadow-lg rounded-md z-10">
+              <button
+                onClick={handleDeleteUser}
+                className="block w-full text-left px-4 text-sm text-white"
+              >
+                Delete conversation
+              </button>
+            </div>
+          )}
+        </div>
+
       </div>
       {/* chat area------------- */}
       <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
@@ -54,7 +54,7 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // function to subscribe to messages for selected user
+  // chức năng đăng ký nhận tin nhắn cho người dùng đã chọn
   const subscribeToMessages = async () => {
     if (!socket) return;
 
@@ -74,16 +74,17 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
-  // function to unsubscribe from messages
+  // chức năng hủy đăng ký nhận tin nhắn
   const unsubscribeFromMessages = () => {
     if (socket) socket.off("newMessage");
   };
 
-  () => {
+  useEffect(() => {
     subscribeToMessages();
     return () => unsubscribeFromMessages();
-  },
-    [socket, selectedUser];
+  }, [socket, selectedUser]);
+
+
 
   const value = {
     messages,

@@ -14,16 +14,30 @@ const Sidebar = () => {
     setUnseenMessages,
   } = useContext(ChatContext);
 
+
   const { logout, onlineUsers } = useContext(AuthContext);
 
   const [input, setInput] = useState(false);
 
   const navigate = useNavigate();
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Tự đóng menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".menu-container")) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   const filteredUsers = input
     ? users.filter((user) =>
-        user.fullName.toLowerCase().includes(input.toLowerCase())
-      )
+      user.fullName.toLowerCase().includes(input.toLowerCase())
+    )
     : users;
 
   useEffect(() => {
@@ -32,29 +46,45 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-[#8185b2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${
-        selectedUser ? "max-md:hidden" : ""
-      }`}
+      className={`bg-[#8185b2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser ? "max-md:hidden" : ""
+        }`}
     >
       <div className="pb-5">
+        {/* open/close */}
         <div className="flex justify-between items-center">
           <img src={assets.logo} alt="logo" className="max-w-40" />
-          <div className="relative py-2 group">
+
+          <div className="relative py-2 menu-container">
+            {/* Icon Menu */}
             <img
               src={assets.menu_icon}
               alt="menu"
               className="max-w-5 cursor-pointer"
+              onClick={() => setMenuOpen(!menuOpen)}
             />
-            {/* hover hidden/block tailwind */}
-            <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
+
+            {/* Dropdown Menu */}
+            <div
+              className={`absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 ${menuOpen ? "block" : "hidden"
+                }`}
+            >
               <p
-                onClick={() => navigate("/profile")}
+                onClick={() => {
+                  navigate("/profile");
+                  setMenuOpen(false);
+                }}
                 className="cursor-pointer text-sm"
               >
                 Edit Profile
               </p>
               <hr className="my-2 border-t border-gray-500" />
-              <p onClick={() => logout()} className="cursor-pointer text-sm">
+              <p
+                onClick={() => {
+                  logout();
+                  setMenuOpen(false);
+                }}
+                className="cursor-pointer text-sm"
+              >
                 Logout
               </p>
             </div>
@@ -79,9 +109,8 @@ const Sidebar = () => {
               setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
             }}
             key={index}
-            className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
-              selectedUser?._id === user._id && "bg-[#282142]/50"
-            }`}
+            className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id && "bg-[#282142]/50"
+              }`}
           >
             <img
               src={user?.profilePic || assets.avatar_icon}

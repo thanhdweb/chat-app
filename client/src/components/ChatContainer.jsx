@@ -12,7 +12,7 @@ const ChatContainer = () => {
 
   const [input, setInput] = useState("");
 
-  // Handle sending a message
+  // Xử lý việc gửi tin nhắn
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (input.trim() === "") return null;
@@ -20,7 +20,7 @@ const ChatContainer = () => {
     setInput("");
   };
 
-  // Handle sending ad image
+  // Xử lý gửi hình ảnh
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("image/")) {
@@ -42,7 +42,7 @@ const ChatContainer = () => {
     }
   }, [selectedUser]);
 
-  //    tạo thanh cuộn chat mượn mà
+  // tạo thanh cuộn chat mượn mà
   const scrollEnd = useRef();
   useEffect(() => {
     if (scrollEnd.current && messages) {
@@ -78,9 +78,8 @@ const ChatContainer = () => {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`flex items-end gap-2 justify-end ${
-              msg.senderId !== authUser._id && "flex-row-reverse"
-            }`}
+            className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"
+              }`}
           >
             {msg.image ? (
               <img
@@ -90,11 +89,10 @@ const ChatContainer = () => {
               />
             ) : (
               <p
-                className={`font-inter p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-words bg-violet-500/30 text-white ${
-                  msg.senderId === authUser._id
-                    ? "rounded-br-none"
-                    : "rounded-bl-none"
-                }`}
+                className={`font-inter p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-words bg-violet-500/30 text-white ${msg.senderId === authUser._id
+                  ? "rounded-br-none"
+                  : "rounded-bl-none"
+                  }`}
               >
                 {msg.text}
               </p>
@@ -127,7 +125,7 @@ const ChatContainer = () => {
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Send a message"
-            className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
+            className="font-inter flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
           />
           <input
             onChange={handleSendImage}

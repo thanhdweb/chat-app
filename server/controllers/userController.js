@@ -107,3 +107,33 @@ export const updateProfile = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// delete user
+export const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Kiểm tra user có tồn tại không
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Xóa user
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};

@@ -40,14 +40,14 @@ const LoginPage = () => {
                 {/* full name */}
                 {currState === "Sign up" && !isDataSubmitted && (
                     <input onChange={(e) => setFullname(e.target.value)} value={fullName}
-                        type="text" className='p-2 border border-gray-500 rounded-md focus:outline-none' placeholder='Full name' required />
+                        type="text" className='font-inter p-2 border border-gray-500 rounded-md focus:outline-none' placeholder='Full name' required />
                 )}
 
                 {/* email/password */}
                 {!isDataSubmitted && (
                     <>
                         <input onChange={(e) => setEmail(e.target.value)} value={email}
-                            type="email" placeholder='Email Address' required className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500' />
+                            type="email" placeholder='Email Address' required className='font-inter p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500' />
 
                         <input onChange={(e) => setPassword(e.target.value)} value={password}
                             type="password" placeholder='Password' required className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500' />
@@ -57,7 +57,7 @@ const LoginPage = () => {
                 {/* bio */}
                 {currState === "Sign up" && isDataSubmitted && (
                     <textarea onChange={(e) => setBio(e.target.value)} value={bio}
-                        rows={4} className='p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500' placeholder='provide a short bio...' required></textarea>
+                        rows={4} className='font-inter p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500' placeholder='provide a short bio...' required></textarea>
                 )}
 
                 <button type='submit' className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer'>

@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 
 const ChatContainer = () => {
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
+  const { messages, setMessages, selectedUser, setSelectedUser, sendMessage, getMessages, deleteAllMessages, deleteMessageById, socket } =
     useContext(ChatContext);
   const { authUser, onlineUsers, deleteUser } = useContext(AuthContext);
 
@@ -31,7 +31,7 @@ const ChatContainer = () => {
       text: "You won't be able to revert this!",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonText: "Yes !",
     });
 
     if (result.isConfirmed) {
@@ -45,6 +45,76 @@ const ChatContainer = () => {
       }
     }
   };
+
+  // xử lý xóa all tin nhắn
+  const handleDeleteAllMessages = async (e) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will delete all messages with this user.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes !",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteAllMessages();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+
+  // xử lý xóa tin nhắn riêng lẻ
+  const handleMessageLongPress = (msg) => {
+    if (msg.senderId !== authUser._id) return;
+
+    let pressTimer;
+
+    const start = () => {
+      pressTimer = setTimeout(() => {
+        Swal.fire({
+          title: "Delete this message?",
+          text: "This action cannot be undone.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes !",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              await deleteMessageById(msg._id);
+            } catch (error) {
+              console.log(error);
+            }
+          }
+        });
+      }, 600); // 600ms for long press
+    }
+    const cancel = () => clearTimeout(pressTimer);
+
+    // trả về object handler để gắn vào thẻ
+    return {
+      onMouseDown: start,
+      onTouchStart: start,
+      onMouseUp: cancel,
+      onTouchEnd: cancel,
+      onMouseLeave: cancel,
+    };
+  }
+
+  // cập nhật UI sao khi xóa tin nhắn 2 bên
+  useEffect(() => {
+    socket.on("messageDeleted", ({ messageId }) => {
+      setMessages(prevMessages => prevMessages.filter(msg => msg._id !== messageId));
+    });
+
+    return () => {
+      socket.off("messageDeleted");
+    };
+  }, [socket]);
 
 
   // Xử lý gửi hình ảnh
@@ -91,6 +161,8 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
+
+
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
       {/* header--------------- */}
@@ -98,7 +170,7 @@ const ChatContainer = () => {
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
-          className="w-8 rounded-full"
+          className="w-10 h-10 rounded-full"
         />
         <p className="flex-1 text-lg text-white flex items-center gap-2">
           {selectedUser.fullName}
@@ -110,7 +182,7 @@ const ChatContainer = () => {
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
           alt=""
-          className="md:hidden max-w-7"
+          className="md:hidden max-w-5"
         />
         <div ref={dropdownRef} className="relative">
           <img
@@ -121,12 +193,19 @@ const ChatContainer = () => {
           />
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute top-full right-0 w-48 p-3 bg-[#282142] border border-gray-600 text-gray-100 shadow-lg rounded-md z-10">
+            <div className="absolute top-full right-0 w-42 p-3 bg-[#282142] border border-gray-600 text-gray-100 shadow-lg rounded-md z-10">
               <button
                 onClick={handleDeleteUser}
-                className="block w-full text-left px-4 text-sm text-white"
+                className="block w-full text-left text-sm text-white"
               >
                 Delete conversation
+              </button>
+              <hr className="my-2 border-t border-gray-500" />
+              <button
+                onClick={handleDeleteAllMessages}
+                className="block w-full text-left text-sm text-white"
+              >
+                Delete all messages
               </button>
             </div>
           )}
@@ -147,7 +226,7 @@ const ChatContainer = () => {
                 className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
               />
             ) : (
-              <p
+              <p {...handleMessageLongPress(msg)}
                 className={`font-inter p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-words bg-violet-500/30 text-white ${msg.senderId === authUser._id
                   ? "rounded-br-none"
                   : "rounded-bl-none"

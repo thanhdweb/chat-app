@@ -102,3 +102,73 @@ export const sendMessage = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Xóa toàn bộ tin nhắn giữa user hiện tại và user được chọn
+export const deleteAllMessages = async (req, res) => {
+  try {
+    const myId = req.user._id;
+    const { id: selectedUserId } = req.params;
+
+    await Message.deleteMany({
+      $or: [
+        { senderId: myId, receiverId: selectedUserId },
+        { senderId: selectedUserId, receiverId: myId },
+      ],
+    });
+
+    // Gửi socket cho người kia nếu đang online
+    const receiverSocketId = userSocketMap[selectedUserId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messagesDeleted", { by: myId });
+    }
+
+    res.json({ success: true, message: "All messages deleted." });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: "Failed to delete messages." });
+  }
+};
+
+// Xóa tin nhắn theo riêng lẻ id
+export const deleteMessageById = async (req, res) => {
+  try {
+    const messageId = req.params.id;
+    const { userId } = req.body;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Message not found." });
+    }
+
+    if (message.senderId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own messages.",
+      });
+    }
+
+    // Lấy thông tin người nhận tin nhắn (để emit socket)
+    const receiverId = message.receiverId.toString(); // giả sử bạn có trường receiverId
+
+    await Message.findByIdAndDelete(messageId);
+
+    // PHÁT SỰ KIỆN SOCKET NGAY SAU KHI XÓA THÀNH CÔNG
+    // userSocketMap là map userId => socketId (bạn lưu ở đâu đó trong server socket)
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("messageDeleted", { messageId });
+    }
+
+    return res.json({
+      success: true,
+      message: "Message deleted successfully.",
+    });
+  } catch (error) {
+    console.log(error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to delete message." });
+  }
+};

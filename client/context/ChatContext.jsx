@@ -10,7 +10,7 @@ export const ChatProvider = ({ children }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
 
-  const { socket, axios } = useContext(AuthContext);
+  const { socket, axios, authUser } = useContext(AuthContext);
 
   // Function to get all users for sidebar
   const getUsers = async () => {
@@ -74,20 +74,61 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
+
+  // Xóa all messages between the current user and the selected user
+  const deleteAllMessages = async () => {
+    try {
+      const { data } = await axios.delete(`/api/messages/delete-messages/${selectedUser._id}`);
+      if (data.success) {
+        setMessages([]); // Clear tin nhắn trên giao diện
+      } else {
+        toast.error(data.message || "Failed to delete messages");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
+  // Xóa tin nhắn theo id
+  const deleteMessageById = async (messageId) => {
+    try {
+      const { data } = await axios.delete(`/api/messages/delete-message/${messageId}`, {
+        data: { userId: authUser._id },
+      })
+
+      if (data.success) {
+        // cập nhât lại danh sách tin nhắn
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId))
+        // Gửi socket cho người kia
+        socket.emit("deleteMessage", {
+          messageId,
+          receiverId: selectedUser._id, // người đang chat với bạn
+        });
+      } else {
+        toast.error(data.error || "Failed to delete message");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
   // chức năng hủy đăng ký nhận tin nhắn
   const unsubscribeFromMessages = () => {
     if (socket) socket.off("newMessage");
   };
 
+  //-------
   useEffect(() => {
     subscribeToMessages();
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
 
+  // ---------
 
 
   const value = {
     messages,
+    setMessages,
     users,
     selectedUser,
     getUsers,
@@ -96,6 +137,9 @@ export const ChatProvider = ({ children }) => {
     setSelectedUser,
     unseenMessages,
     setUnseenMessages,
+    deleteAllMessages,
+    deleteMessageById,
+    socket
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

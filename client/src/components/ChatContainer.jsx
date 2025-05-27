@@ -6,6 +6,10 @@ import { ChatContext } from "../../context/ChatContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 
+// import icon
+import { FaArrowLeft } from "react-icons/fa";
+import { AiFillInfoCircle } from "react-icons/ai";
+
 const ChatContainer = () => {
   const { messages, setMessages, selectedUser, setSelectedUser, sendMessage, getMessages, deleteAllMessages, deleteMessageById, socket } =
     useContext(ChatContext);
@@ -166,7 +170,8 @@ const ChatContainer = () => {
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
       {/* header--------------- */}
-      <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500">
+      <div className="flex items-center gap-5 py-3 mx-4 border-b border-stone-500">
+        <FaArrowLeft onClick={() => setSelectedUser(null)} className="text-white text-lg md:hidden" />
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
@@ -178,19 +183,8 @@ const ChatContainer = () => {
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
           )}
         </p>
-        <img
-          onClick={() => setSelectedUser(null)}
-          src={assets.arrow_icon}
-          alt=""
-          className="md:hidden max-w-5"
-        />
         <div ref={dropdownRef} className="relative">
-          <img
-            src={assets.menu_icon}
-            alt=""
-            className="max-w-5 cursor-pointer"
-            onClick={() => setShowDropdown(!showDropdown)}
-          />
+          <AiFillInfoCircle onClick={() => setShowDropdown(!showDropdown)} className="text-white text-2xl cursor-pointer" />
           {/* Dropdown Menu */}
           {showDropdown && (
             <div className="absolute top-full right-0 w-42 p-3 bg-[#282142] border border-gray-600 text-gray-100 shadow-lg rounded-md z-10">
